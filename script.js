@@ -935,38 +935,48 @@ function renderSalesHistory(){
 }
 
 // ---------- HISOBOT VA TELEGRAM BOT ----------
-function renderHisobot(){
-  const now = new Date();
-  // Mahalliy vaqt bo'yicha to'g'ri YYYY-MM-DD formatini olish
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
-  const monthStr = `${year}-${month}`;
+function renderScanResults(matches, context){
+  const c = SCAN_CTX[context];
+  const panel = document.getElementById(c.resultsPanel);
+  const el = document.getElementById(c.results);
+  el.innerHTML = '';
 
-  const todayTotal = sales.filter(s => {
-    if (!s.timestamp) return false;
-    return s.timestamp.slice(0, 10) === todayStr;
-  }).reduce((sum, s) => sum + s.total, 0);
+  const valid = (matches || []).filter(m => products.find(p => p.id === m.id)).slice(0, 5);
+  if(valid.length === 0){
+    panel.style.display = 'block';
+    el.innerHTML = '<div class="empty-note">Mos mahsulot topilmadi</div>';
+    return;
+  }
 
-  const monthSales = sales.filter(s => {
-    if (!s.timestamp) return false;
-    return s.timestamp.slice(0, 7) === monthStr;
+  valid.forEach(m=>{
+    const product = products.find(p => p.id === m.id);
+    const score = Math.max(0, Math.min(100, Math.round(m.score || 0)));
+    const row = document.createElement('div');
+    row.className = 'scan-result-row';
+
+    const stockQty = product.qty || 0;
+    let actionBtnHtml = '';
+
+    if (stockQty <= 0) {
+      actionBtnHtml = `<button class="scan-select-btn" style="background-color: #dc3545; color: white;" disabled>Tugadi</button>`;
+    } else {
+      actionBtnHtml = `<button class="scan-select-btn" onclick="selectScanResult('${product.id}','${context}')">${ICONS.addToCart} Savatga</button>`;
+    }
+
+    row.innerHTML = `
+      <img class="scan-result-thumb" src="${product.image}">
+      <div class="scan-result-info">
+        <div class="scan-result-name">${escapeHtml(product.name)}</div>
+        <div style="font-size: 12px; color: #666; margin-top: 2px;">Aniqlik: ${score}% | Qoldiq: ${stockQty} m</div>
+        <div class="scan-score-track"><div class="scan-score-fill" style="width:${score}%"></div></div>
+      </div>
+      <div class="scan-score-pct">${score}%</div>
+      ${actionBtnHtml}
+    `;
+    el.appendChild(row);
   });
-  const monthTotal = monthSales.reduce((sum, s) => sum + s.total, 0);
-  const stockValue = products.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 0), 0);
-
-  const expenseToday = expenses.filter(e => {
-    if (!e.timestamp) return false;
-    return e.timestamp.slice(0, 10) === todayStr;
-  }).reduce((sum, e) => sum + e.amount, 0);
-
-  const expenseMonth = expenses.filter(e => {
-    if (!e.timestamp) return false;
-    return e.timestamp.slice(0, 7) === monthStr;
-  }).reduce((sum, e) => sum + e.amount, 0);
-  
-  const profitToday = todayTotal - expenseToday;
+  panel.style.display = 'block';
+}
 
   // Xavfsiz tarzda DOM elementlarga yozish
   const setTxt = (id, val) => {
@@ -1024,15 +1034,68 @@ async function sendTelegramReport(){
   }
 
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
-  const dateFormatted = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  const dateFormatted = `${day}.${month}.${year}`;
 
-  const todaySales = sales.filter(s => s.timestamp.slice(0,10) === todayStr);
+  const todaySales = sales.filter(s => s.timestamp && s.timestamp.slice(0, 10) === todayStr);
 
   if(todaySales.length === 0){
     showToast("Bugun sotuv bo'lmagan");
     return;
   }
+
+  let salesText = "";
+  let totalSalesSum = 0;
+
+  todaySales.forEach((s, index) => {
+    let totalMeters = 0;
+    if (s.items && Array.isArray(s.items)) {
+      s.items.forEach(item => { totalMeters += (item.qty || 0); });
+    }
+    totalSalesSum += s.total;
+
+    let docNumVal = 'xxxx';
+    if (s.items && s.items.length > 0) {
+      docNumVal = s.items[0].doc || s.items[0].name || 'xxxx';
+    }
+
+    salesText += `${index + 1}. Hujjat raqami: ${docNumVal}\n`;
+    salesText += `Sotildi: ${totalMeters} m\n`;
+    salesText += `Summasi: ${fmt(s.total)} so'm\n\n`;
+  });
+
+  const todayExpenses = expenses
+    .filter(e => e.timestamp && e.timestamp.slice(0, 10) === todayStr)
+    .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+  const umumiyKassa = totalSalesSum - todayExpenses;
+
+  let msg = `Sana: ${dateFormatted}\n\n`;
+  msg += salesText;
+  msg += `----\n`;
+  msg += `Chiqim: ${fmt(todayExpenses)} so'm\n`;
+  msg += `__________________\n`;
+  msg += `Umumiy kassa(bugun): ${fmt(umumiyKassa)} so'm`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg })
+    });
+    const data = await res.json();
+    if(data.ok){
+      showToast("Hisobot Telegramga yuborildi!");
+    } else {
+      showToast("Telegram xatosi: " + data.description);
+    }
+  } catch(e) {
+    showToast("Yuborishda xatolik yuz berdi");
+  }
+}
 
   // Mahsulotlarni Hujjat raqami bo'yicha guruhlash
   const grouped = {};
