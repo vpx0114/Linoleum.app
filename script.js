@@ -977,7 +977,6 @@ function renderScanResults(matches, context){
   });
   panel.style.display = 'block';
 }
-
   // Xavfsiz tarzda DOM elementlarga yozish
   const setTxt = (id, val) => {
     const el = document.getElementById(id);
