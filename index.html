@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linoleum — Do'kon tizimi</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="6" width="15" height="12" rx="3.2" fill="currentColor" opacity="0.95"/>
+          <rect x="20" y="6" width="17" height="12" rx="3.2" fill="currentColor" opacity="0.55"/>
+          <rect x="3" y="21" width="17" height="12" rx="3.2" fill="currentColor" opacity="0.55"/>
+          <rect x="22" y="21" width="15" height="12" rx="3.2" fill="currentColor" opacity="0.95"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Linoleum — Do'kon tizimi</h1>
+        <div class="sub">Kassa · Ombor · Skaner · Hisobot</div>
+      </div>
+    </div>
+    <span class="tag" id="statusTag">yuklanmoqda...</span>
+  </header>
+  <div class="ruler" aria-hidden="true"></div>
+
+  <nav>
+    <button class="tab-btn active" data-view="kassa">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 8H6"/><circle cx="9.5" cy="20" r="1.4" fill="currentColor" stroke="none"/><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>
+      <span class="nav-label">Kassa</span>
+    </button>
+    <button class="tab-btn" data-view="ombor">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.2 12 4l8.5 4.2v8.1L12 20.5l-8.5-4.2Z"/><path d="M3.5 8.2 12 12l8.5-4.2M12 12v8.5"/></svg>
+      <span class="nav-label">Ombor</span>
+    </button>
+    <button class="tab-btn" data-view="skaner">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.4"/></svg>
+      <span class="nav-label">Skaner</span>
+    </button>
+    <button class="tab-btn" data-view="hisobot">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      <span class="nav-label">Hisobot</span>
+    </button>
+  </nav>
+
+  <!-- KASSA -->
+  <div class="view active" id="view-kassa">
+    <div class="grid">
+      <div class="panel">
+        <h2>Mahsulotlar</h2>
+        <div id="kassaProductList"></div>
+      </div>
+      <div class="receipt">
+        <h2 style="margin-bottom:10px;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2.5-1.6L13 21l-1-1.6L11 21l-2.5-1.6L6 21Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          Chek
+        </h2>
+        <div class="receipt-items" id="receiptItems">
+          <div class="receipt-empty">Savat bo'sh</div>
+        </div>
+        <div class="receipt-total">
+          <span class="label">Jami</span>
+          <span class="value" id="receiptTotal">0</span>
+        </div>
+        <button class="primary" id="sellBtn" disabled><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 6.5"/></svg> Sotish</button>
+      </div>
+    </div>
+
+    <!-- KASSA UCHUN IKKI REJIMLI SKANER -->
+    <div class="panel" style="margin-top:16px;">
+      <h2>Tez skanerlash (AI)</h2>
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="kassaBtnModeFile" onclick="setCameraMode('file', 'kassa')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.6"/><circle cx="8.4" cy="10" r="1.5"/><path d="m4.5 17 4.6-4.6a1.8 1.8 0 0 1 2.5 0l1 1 3-3a1.8 1.8 0 0 1 2.5 0l2.5 2.5"/></svg> Fayl</button>
+        <button type="button" class="mode-switch-btn" id="kassaBtnModeLive" onclick="setCameraMode('live', 'kassa')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="12.5" height="11" rx="2.6"/><path d="M15.5 10.2 21 7v10l-5.5-3.2Z"/></svg> Jonli kamera</button>
+      </div>
+
+      <div class="camera-container" id="kassaCameraWrap">
+        <video id="kassaWebcamVideo" autoplay playsinline></video>
+      </div>
+
+      <button type="button" class="white-scan-btn" id="kassaSnapAndScanBtn" style="display:none;" onclick="snapAndScan('kassa')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg> Suratga olish va qidirish</button>
+
+      <div id="kassaFileScanContainer">
+        <label class="scan-upload-btn" for="kassaScanInput" style="width:100%; text-align:center;"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1.5 1.5 0 0 1 1.5 1.5V18A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9.5A1.5 1.5 0 0 1 4 8Z"/><circle cx="12" cy="14" r="3.4"/></svg> Suratga olish / rasm tanlash</label>
+        <input type="file" id="kassaScanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'kassa')" style="display:none;">
+      </div>
+
+      <div class="scan-preview" id="kassaScanPreviewWrap"></div>
+      <div class="scan-status" id="kassaScanStatus"></div>
+
+      <div id="kassaScanResultsPanel" style="display:none; margin-top:12px;">
+        <h2 style="font-size:11px;">Topilgan mahsulotlar:</h2>
+        <div id="kassaScanResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OMBOR -->
+  <div class="view" id="view-ombor">
+    <div class="panel">
+      <h2>Yangi mahsulot qo'shish</h2>
+      <div class="img-upload-row">
+        <div id="newImagePreviewWrap"><div class="img-preview-placeholder">Rasm yo'q</div></div>
+        <div style="flex:1;">
+          <label>Mahsulot rasmi</label>
+          <input type="file" id="newImageInput" accept="image/*" onchange="handleNewImageFile(this)">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Nomi</label><input id="newName" placeholder="masalan: Tarkett Premium 3m"></div>
+        <div class="field"><label>Hujjat raqami</label><input id="newDoc" placeholder="ishlab chiqaruvchi kodi"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Narxi (so'm / m)</label><input id="newPrice" type="number" placeholder="0"></div>
+        <div class="field"><label>Boshlang'ich qoldiq (m)</label><input id="newQty" type="number" placeholder="0"></div>
+      </div>
+      <button class="secondary" id="addProductBtn" style="width:100%;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Qo'shish</button>
+    </div>
+    <div class="panel" style="margin-top:16px;">
+      <h2>Ombordagi mahsulotlar</h2>
+      <!-- OMBOR QIDIRUV MAYDONI -->
+      <div class="field search-field" style="margin-bottom:14px;">
+        <svg class="search-field-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m19.5 19.5-4-4"/></svg>
+        <input type="text" id="omborSearchInput" placeholder="Hujjat raqami yoki nomi bo'yicha qidiruv..." oninput="renderOmborTable()">
+      </div>
+      <table>
+        <thead>
+          <tr><th></th><th>Nomi</th><th>Hujjat №</th><th class="num">Narx (so'm/m)</th><th class="num">Qoldiq (m)</th><th>Amallar</th></tr>
+        </thead>
+        <tbody id="omborTableBody"></tbody>
+      </table>
+      <div id="omborEmpty" class="empty-note" style="display:none;">Hali mahsulot qo'shilmagan</div>
+    </div>
+  </div>
+
+  <!-- SKANER -->
+  <div class="view" id="view-skaner">
+    <div class="panel">
+      <h2>Linoleumni skanerlash (Local AI)</h2>
+      <p class="scan-note">Kamerani namunaga qarating va oq tugma yordamida suratga oling — ombordagi <strong>rasmi biriktirilgan</strong> mahsulotlar bilan solishtiriladi.</p>
+
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" id="btnModeFile" onclick="setCameraMode('file', 'skaner')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.6"/><circle cx="8.4" cy="10" r="1.5"/><path d="m4.5 17 4.6-4.6a1.8 1.8 0 0 1 2.5 0l1 1 3-3a1.8 1.8 0 0 1 2.5 0l2.5 2.5"/></svg> Fayl</button>
+        <button type="button" class="mode-switch-btn" id="btnModeLive" onclick="setCameraMode('live', 'skaner')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="12.5" height="11" rx="2.6"/><path d="M15.5 10.2 21 7v10l-5.5-3.2Z"/></svg> Jonli kamera</button>
+      </div>
+
+      <div class="camera-container" id="cameraWrap">
+        <video id="webcamVideo" autoplay playsinline></video>
+      </div>
+
+      <button type="button" class="white-scan-btn" id="snapAndScanBtn" style="display:none;" onclick="snapAndScan('skaner')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg> Suratga olish va qidirish</button>
+
+      <div id="fileScanContainer">
+        <label class="scan-upload-btn" for="scanInput" style="width:100%; text-align:center;"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1.5 1.5 0 0 1 1.5 1.5V18A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9.5A1.5 1.5 0 0 1 4 8Z"/><circle cx="12" cy="14" r="3.4"/></svg> Suratga olish / rasm tanlash</label>
+        <input type="file" id="scanInput" accept="image/*" capture="environment" onchange="handleScanFile(this,'skaner')" style="display:none;">
+      </div>
+
+      <div class="scan-preview" id="scanPreviewWrap"></div>
+      <div class="scan-status" id="scanStatus"></div>
+    </div>
+
+    <div class="panel" id="scanResultsPanel" style="margin-top:16px; display:none;">
+      <h2>Eng o'xshash mahsulotlar</h2>
+      <div id="scanResults"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Zaxira nusxa</h2>
+      <p class="scan-note">Ma'lumot shu brauzerda saqlanadi. Boshqa qurilmaga o'tsangiz yoki brauzer keshini tozalasangiz yo'qolib ketmasligi uchun vaqti-vaqti bilan zaxira nusxa olib turing.</p>
+      <div class="settings-row">
+        <button class="secondary" id="exportBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M8 11l4 4 4-4"/><path d="M4.5 16.5V19a1.7 1.7 0 0 0 1.7 1.7h11.6A1.7 1.7 0 0 0 19.5 19v-2.5"/></svg> Zaxira nusxa yuklab olish</button>
+        <label class="secondary" for="restoreInput" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5v-11M8 6.5l4-4 4 4"/><path d="M4.5 16.5V19a1.7 1.7 0 0 0 1.7 1.7h11.6A1.7 1.7 0 0 0 19.5 19v-2.5"/></svg> Fayldan tiklash</label>
+        <input type="file" id="restoreInput" accept="application/json" onchange="handleRestoreFile(this)" style="display:none;">
+      </div>
+      <div id="restoreStatus" class="scan-note" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- HISOBOT -->
+  <div class="view" id="view-hisobot">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 8H6"/><circle cx="9.5" cy="20" r="1.4" fill="currentColor" stroke="none"/><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg></div><div class="slabel">Bugungi savdo</div><div class="sval" id="statToday">0</div></div>
+      <div class="stat-card"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg></div><div class="slabel">Shu oy savdo</div><div class="sval" id="statMonth">0</div></div>
+      <div class="stat-card"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.2 12 4l8.5 4.2v8.1L12 20.5l-8.5-4.2Z"/><path d="M3.5 8.2 12 12l8.5-4.2M12 12v8.5"/></svg></div><div class="slabel">Ombor qiymati</div><div class="sval" id="statStockValue">0</div></div>
+      <div class="stat-card exp"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M8 11l4 4 4-4"/><path d="M4.5 16.5V19a1.7 1.7 0 0 0 1.7 1.7h11.6A1.7 1.7 0 0 0 19.5 19v-2.5"/></svg></div><div class="slabel">Bugungi chiqim</div><div class="sval" id="statExpenseToday">0</div></div>
+      <div class="stat-card exp"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M8 11l4 4 4-4"/><path d="M4.5 16.5V19a1.7 1.7 0 0 0 1.7 1.7h11.6A1.7 1.7 0 0 0 19.5 19v-2.5"/></svg></div><div class="slabel">Oylik chiqim</div><div class="sval" id="statExpenseMonth">0</div></div>
+      <div class="stat-card profit"><div class="sicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 6.5"/></svg></div><div class="slabel">Sof foyda (bugun)</div><div class="sval" id="statProfitToday">0</div></div>
+    </div>
+
+    <!-- TELEGRAM BOT SOZLAMALARI -->
+    <div class="panel" style="margin-bottom:16px;">
+      <h2>
+        <span style="display:flex; align-items:center; gap:7px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 3 10.6l6.2 2.3M20.5 3.5 14.9 20l-5.7-7.1M20.5 3.5 9.2 13.5"/></svg> Telegram bot</span>
+        <button class="icon-btn wide" onclick="toggleTgSettings()" title="Sozlamalarni ochish/yopish"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.8 6.2l-1.4 1.4M7.6 16.4l-1.4 1.4M17.8 17.8l-1.4-1.4M7.6 7.6 6.2 6.2"/></svg> Sozlamalar</button>
+      </h2>
+
+      <div id="tgSettingsBox" style="display:none; margin-bottom:12px; background:var(--surface-2); padding:12px; border-radius:8px; border:1px solid var(--line);">
+        <div class="row2">
+          <div class="field"><label>Bot Token</label><input type="text" id="tgBotToken" placeholder="123456789:ABCdef..." onchange="saveTgSettings()"></div>
+          <div class="field"><label>Chat ID</label><input type="text" id="tgChatId" placeholder="987654321" onchange="saveTgSettings()"></div>
+        </div>
+      </div>
+
+      <button class="secondary" style="width:100%; margin-top:4px;" onclick="sendTelegramReport()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 3 10.6l6.2 2.3M20.5 3.5 14.9 20l-5.7-7.1M20.5 3.5 9.2 13.5"/></svg> Hozir hisobotni Telegramga yuborish</button>
+    </div>
+
+    <div class="panel">
+      <h2>Eng ko'p sotilgan mahsulotlar (shu oy)</h2>
+      <div id="topProducts"></div>
+      <div id="topEmpty" class="empty-note" style="display:none;">Bu oyda sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>So'nggi sotuvlar</h2>
+      <div id="salesHistoryList"></div>
+      <div id="salesHistoryEmpty" class="empty-note" style="display:none;">Hali sotuv bo'lmagan</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Chiqim qo'shish</h2>
+      <div class="row2">
+        <div class="field"><label>Summasi (so'm)</label><input id="newExpenseAmount" type="number" placeholder="0"></div>
+        <div class="field"><label>Izoh</label><input id="newExpenseNote" placeholder="masalan: yetkazib berish, ijara"></div>
+      </div>
+      <button class="secondary" id="addExpenseBtn" style="width:100%;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Chiqim qo'shish</button>
+      <div id="expenseList" style="margin-top:14px;"></div>
+      <div id="expenseEmpty" class="empty-note" style="display:none;">Hali chiqim yozilmagan</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<script src="icons.js"></script>
+<script src="script.js"></script>
+<script src="animations.js"></script>
+</body>
+</html>
