@@ -937,53 +937,80 @@ function renderSalesHistory(){
 // ---------- HISOBOT VA TELEGRAM BOT ----------
 function renderHisobot(){
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
-  const monthStr = now.toISOString().slice(0,7);
+  // Mahalliy vaqt bo'yicha to'g'ri YYYY-MM-DD formatini olish
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  const monthStr = `${year}-${month}`;
 
-  const todayTotal = sales.filter(s => s.timestamp.slice(0,10) === todayStr)
-    .reduce((sum,s)=> sum + s.total, 0);
-  const monthSales = sales.filter(s => s.timestamp.slice(0,7) === monthStr);
-  const monthTotal = monthSales.reduce((sum,s)=> sum + s.total, 0);
-  const stockValue = products.reduce((sum,p)=> sum + p.price * p.qty, 0);
+  const todayTotal = sales.filter(s => {
+    if (!s.timestamp) return false;
+    return s.timestamp.slice(0, 10) === todayStr;
+  }).reduce((sum, s) => sum + s.total, 0);
 
-  const expenseToday = expenses.filter(e => e.timestamp.slice(0,10) === todayStr)
-    .reduce((sum,e)=> sum + e.amount, 0);
-  const expenseMonth = expenses.filter(e => e.timestamp.slice(0,7) === monthStr)
-    .reduce((sum,e)=> sum + e.amount, 0);
+  const monthSales = sales.filter(s => {
+    if (!s.timestamp) return false;
+    return s.timestamp.slice(0, 7) === monthStr;
+  });
+  const monthTotal = monthSales.reduce((sum, s) => sum + s.total, 0);
+  const stockValue = products.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 0), 0);
+
+  const expenseToday = expenses.filter(e => {
+    if (!e.timestamp) return false;
+    return e.timestamp.slice(0, 10) === todayStr;
+  }).reduce((sum, e) => sum + e.amount, 0);
+
+  const expenseMonth = expenses.filter(e => {
+    if (!e.timestamp) return false;
+    return e.timestamp.slice(0, 7) === monthStr;
+  }).reduce((sum, e) => sum + e.amount, 0);
+  
   const profitToday = todayTotal - expenseToday;
 
-  document.getElementById('statToday').textContent = fmt(todayTotal);
-  document.getElementById('statMonth').textContent = fmt(monthTotal);
-  document.getElementById('statStockValue').textContent = fmt(stockValue);
-  document.getElementById('statExpenseToday').textContent = fmt(expenseToday);
-  document.getElementById('statExpenseMonth').textContent = fmt(expenseMonth);
-  document.getElementById('statProfitToday').textContent = fmt(profitToday);
+  // Xavfsiz tarzda DOM elementlarga yozish
+  const setTxt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fmt(val);
+  };
+
+  setTxt('statToday', todayTotal);
+  setTxt('statMonth', monthTotal);
+  setTxt('statStockValue', stockValue);
+  setTxt('statExpenseToday', expenseToday);
+  setTxt('statExpenseMonth', expenseMonth);
+  setTxt('statProfitToday', profitToday);
 
   renderExpenseList();
   renderSalesHistory();
 
   const productTotals = {};
-  monthSales.forEach(s=>{
-    s.items.forEach(item=>{
-      productTotals[item.name] = (productTotals[item.name] || 0) + item.qty;
-    });
+  monthSales.forEach(s => {
+    if (s.items && Array.isArray(s.items)) {
+      s.items.forEach(item => {
+        productTotals[item.name] = (productTotals[item.name] || 0) + item.qty;
+      });
+    }
   });
-  const sorted = Object.entries(productTotals).sort((a,b)=> b[1]-a[1]).slice(0,5);
+  
+  const sorted = Object.entries(productTotals).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const topEl = document.getElementById('topProducts');
   const topEmpty = document.getElementById('topEmpty');
-  topEl.innerHTML = '';
-  topEmpty.style.display = sorted.length === 0 ? 'block' : 'none';
-  const max = sorted.length ? sorted[0][1] : 1;
-  sorted.forEach(([name, qty])=>{
-    const row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = `
-      <div class="bar-name">${escapeHtml(name)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(qty/max*100).toFixed(0)}%"></div></div>
-      <div class="bar-val">${qty} m</div>
-    `;
-    topEl.appendChild(row);
-  });
+  if (topEl) {
+    topEl.innerHTML = '';
+    if (topEmpty) topEmpty.style.display = sorted.length === 0 ? 'block' : 'none';
+    const max = sorted.length ? sorted[0][1] : 1;
+    sorted.forEach(([name, qty]) => {
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = `
+        <div class="bar-name">${escapeHtml(name)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(qty / max * 100).toFixed(0)}%"></div></div>
+        <div class="bar-val">${qty} m</div>
+      `;
+      topEl.appendChild(row);
+    });
+  }
 }
 
 // TELEGRAM BOTGA KUNLIK HISOBOT YUBORISH
