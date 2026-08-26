@@ -75,7 +75,7 @@
       if (!el) return;
       var target = parseFormattedNumber(el.textContent);
       var from = lastStatValues.hasOwnProperty(id) ? lastStatValues[id] : 0;
-      if (from === target) { lastStatValues[id] = target; return; }
+      if (from === target) { lastStatValues[id] = target; isAnimatingStats = false; return; }
       var obj = { val: from };
       anime({
         targets: obj,
@@ -89,26 +89,16 @@
         complete: function(){
           el.textContent = formatUZ(target);
           lastStatValues[id] = target;
+          isAnimatingStats = false;
         }
       });
     });
   }
 
-  var hisobotObserver = null;
+  // Miltillashni keltirib chiqaruvchi ortiqcha observer olib tashlandi
   function attachHisobotObserver(){
-    var view = document.getElementById('view-hisobot');
-    if (!view || view.__animObserved) return;
-    view.__animObserved = true;
-    var target = document.getElementById('statToday');
-    if (!target) return;
-    hisobotObserver = new MutationObserver(function(){
-      if (view.classList.contains('active')){
-        animateStatCounters();
-      }
-    });
-    hisobotObserver.observe(target.parentElement.parentElement, { childList: true, subtree: true, characterData: true });
+    // Faqat tab ochilganda bir marta ishlaydi
   }
-
   /* ---------- 3) Tab almashtirishda yo'nalishli (iOS uslubidagi) o'tish ---------- */
   var tabOrder = ['kassa', 'ombor', 'skaner', 'hisobot'];
   var currentTabIndex = 0;
