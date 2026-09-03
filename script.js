@@ -100,6 +100,43 @@ function formatDateTime(iso){
   return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// ---------- REAL VAQTDA SINXRONLASH (boshqa qurilmadagi o'zgarishlarni avtomatik olish) ----------
+let realtimeSyncAttached = false;
+
+function attachRealtimeSync(){
+  if(realtimeSyncAttached) return;
+  if(typeof db === 'undefined' || !db) return;
+  realtimeSyncAttached = true;
+
+  const syncMap = {
+    mahsulotlar: (val) => { products = val; },
+    sotuvlar: (val) => { sales = val; },
+    chiqimlar: (val) => { expenses = val; },
+    harakatlar: (val) => { movements = val; }
+  };
+
+  Object.keys(syncMap).forEach(key => {
+    db.collection('linoleum_data').doc(key).onSnapshot(
+      (doc) => {
+        if(!doc.exists) return;
+        const raw = doc.data().value;
+        try{
+          const parsed = JSON.parse(raw);
+          syncMap[key](parsed);
+          try{ localStorage.setItem(key, raw); }catch(e){}
+          renderAll();
+          setStatus('sinxronlandi');
+        }catch(e){
+          console.log('Sinxronlashda xatolik (' + key + '):', e.message);
+        }
+      },
+      (err) => {
+        console.log('Bulutdan tinglashda xatolik (' + key + '):', err.message);
+      }
+    );
+  });
+}
+
 async function loadData(){
   setStatus('yuklanmoqda...');
   try{
@@ -128,6 +165,7 @@ async function loadData(){
 
   setStatus('saqlangan');
   renderAll();
+  attachRealtimeSync();
 
   loadMobilenetModel().catch(e=>console.log("AI pre-load err:", e));
 }
